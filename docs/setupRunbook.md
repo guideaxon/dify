@@ -59,7 +59,7 @@ cd docker\crm-local
 python mock_crm.py          # leave running; listens on :8090
 ```
 
-Check: `curl http://localhost:8090/crm/contacts` lists six contacts (Priya Tester1 to Tom Tester6). Reset between runs: `.\reset_mock_crm.ps1`.
+Check: `curl http://localhost:8090/crm/contacts` lists six contacts (Priya Tester1 to Tom Tester6). Reset between runs: `.\reset_mock_crm.ps1`. The mock has no authentication, so run it only on a trusted machine; it accepts a reset only when the request arrives from the machine itself. On Docker Desktop for Windows that includes Dify's containers (their requests arrive as 127.0.0.1), so the check protects against other computers on the network, not against the containers.
 
 ## 6. Start Dify
 
@@ -98,6 +98,18 @@ Check: both models save without error. The most common failure is putting the ch
 Test:
 - **Pre-call brief:** Test Run with Aisha Tester5, `aisha.tester5@example.com`, company Harborview Test Financial, call type Negotiation. Expect a brief mentioning budget 300 to 320k, the open data-residency and liability redlines, and the unanswered 12% discount, in about 10 to 15 seconds.
 - **Post-call update:** Test Run with the same email, call type Negotiation, and the text of `sample_transcripts/aisha_tester5_negotiation.txt`. It pauses at **Review before CRM update** with three editable boxes. **Approve and log to CRM** should log a call activity: check `http://localhost:8090/crm/history?email=aisha.tester5@example.com`. Then run `.\reset_mock_crm.ps1`.
+
+### Recording the walkthrough video (optional)
+
+`docker/crm-local/playwright/video/` builds a narrated, numbered video of the workflows from scripts: every step has a header, a tag showing who does the work (you, automatic, AI, human approval) and an explanation, with a text-to-speech voice. Prerequisites: the workflows imported and passing the tests above, `npm install` in `docker/crm-local/playwright`, `ffmpeg` on PATH, and a saved login (run `node launch.js`, sign in, close that browser).
+
+```powershell
+cd docker\crm-local\playwright\video
+node build.js --only-tts      # narration only: checks the voice and prints its length
+node build.js                 # records every scene -> out\walkthrough.mp4 (takes about 15 minutes)
+```
+
+Details, scene list and how to edit steps are in `docker/crm-local/playwright/video/README.md`; the full reproduction procedure, with checks, is in `docs/videoReproduction.md`. The output folder is git-ignored.
 
 ## 9. Regenerating the workflow files
 

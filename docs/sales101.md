@@ -588,5 +588,54 @@ Things to know for the video:
 ## Are you recording the video?
 
 No. I haven't recorded anything. What exists is the groundwork: the Playwright helpers in `docker/crm-local/playwright/` cover launching the browser, importing, running each app, approving and rejecting. The next steps would be per-scene scripts with pacing and highlights, plus a decision on your voice versus text-to-speech. I can do the recording scripts next if you want. Real capture also needs a screen recorder, since OBS isn't installed. The video plan lists this under Status.
+---
+The video exists and is built from scripts, and the reproduction guide is written. The video is one MP4, 9 minutes 13 seconds, 1600x900, with a text-to-speech voice-over. I checked it through extracted frames, the audio level and the per-step build log. I haven't watched it with sound.
 
-I'd commit these files soon, since a second machine can't use them until they're committed or copied. Should I prepare a commit for you to review?
+## The reproduction guide
+
+[docs/videoReproduction.md](docs/videoReproduction.md) covers:
+
+- **Setup:** versions of every tool used and the ten steps in order, each with a check.
+- **How it works:** the pipeline in one page, and how the narration is lined up with the screen.
+- **Differences between runs:** what varies from run to run.
+- **Problems met:** the problems I hit while making it and their fixes.
+- **Manual versus scripted:** the one-time manual steps, and what the scripts do.
+
+It also says the procedure has been run on this machine only.
+
+## What the video shows
+
+The builder is in `docker/crm-local/playwright/video/` (README there; `node build.js` runs it).
+- **Numbered steps:** every step has a header ("Step 3 of 9").
+- **Who-does-what tag:** blue for you, green for automatic software, purple for an AI step, amber for human approval, grey for explanation.
+- **On-screen explanation:** each step shows a short description of what is happening.
+- **Legend:** the intro explains the tags and says plainly that this is a fixed pipeline with AI steps and a person approving, not an autonomous agent.
+- **Scenes:** an intro, five parts (checking the wiring, before the call, during the call, after the call, using a real CRM), and a recap.
+- **Not included:** the scene that adds or removes an approval gate on the canvas, which is covered in `customizingWorkflows.md` instead.
+
+## Bugs found while recording
+
+- **Mock CRM froze:** it was single-threaded, and Chrome's idle connection blocked it, which timed out one run. It's now threaded, with a regression check.
+- **Wrong on-screen claim:** the mock didn't show the approved email, so a caption was wrong. It now displays it.
+- **Overlay missing:** the info bar was missing on the title-card scenes. Fixed.
+- **Canvas panned:** the canvas panned itself during the node tour, so every scene now starts from a fit-view.
+
+Long model waits are filled with narration and highlighted nodes. The recording also changes Dify's saved canvas view and "last run" markers on the apps, though never their content.
+
+## Repository state
+
+These need your attention, and I haven't acted on the first two:
+
+1. **The earlier commit is already on `origin/main`.** It includes `docs/sales101.md` and a copy, `docs/1.md`, with the pasted chat transcripts and your Dify username. Removing that means rewriting pushed history, which is your call.
+2. **`docs/1.md` is deleted in your working folder**, and that deletion is now staged. I didn't delete it. It goes into the commit as a deletion unless you restore it.
+3. **The video output folder had been staged by something other than me.** I unstaged it, 138 MB on disk, and the folder is now git-ignored.
+
+## Staged for your review
+
+- **Contents:** 25 files, about 1,750 lines added, on top of commit `fc302fe703`. They're the video builder and scenes, the threaded mock CRM, three small helper-script fixes, and the new and updated docs. No media, browser profile, `.env` or `node_modules` is staged, and `git diff --check` is clean.
+- **Review:** the code compiles and passes syntax checks, and the secrets scan found nothing real.
+- **Remaining weak points:**
+  - The deletion helper finds the app menu button by its position in the sidebar.
+  - Scene clicks assume a 1600-pixel-wide window.
+  - The model output on screen changes every run.
+- **Suggested commit header:** `feat(video): add scripted narrated walkthrough builder for CRM workflows`

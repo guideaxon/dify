@@ -279,3 +279,4 @@ docker/crm-local/mock_crm_log.jsonl
 docker/crm-local/playwright/node_modules/
 docker/crm-local/playwright/.profile/
 docker/crm-local/playwright/package-lock.json
+docker/crm-local/playwright/video/out/

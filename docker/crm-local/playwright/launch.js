@@ -8,7 +8,8 @@ const { chromium } = require('playwright-core');
 const path = require('path');
 
 (async () => {
-  const profile = path.join(__dirname, '.profile');
+  // same default and override as video/session.js, so the login saved here is the one the recorder reuses
+  const profile = process.env.DIFY_PROFILE || path.join(__dirname, '.profile');
   const ctx = await chromium.launchPersistentContext(profile, {
     headless: false,
     viewport: null,

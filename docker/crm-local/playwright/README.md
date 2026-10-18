@@ -41,5 +41,9 @@ npm install                     # installs playwright-core 1.57.0
 - The scripts assume Dify at `http://localhost` and a debug port of 9222.
 - UI text matching (button names such as "Import DSL file" and "Create") reflects the Dify version in this checkout and may need adjusting after an upgrade.
 - Importing over an existing app (the app menu's "Import DSL") was unreliable in testing: the open canvas auto-saved its old graph over the import. Use `import.js`, which creates a new app, and remove the stale one with `delete-app.js`.
-- Clicks that have no stable label (the app "..." menu, the toolbar checklist icon) are positioned by screen ratio and depend on the window size. They worked at about 1586 px wide.
+- The app "..." menu button has no label, so `delete-app.js` finds it by its position in the sidebar (top left); everything else uses accessible names or node ids.
 - `.profile/` and `node_modules/` are not committed.
+
+## Video builder
+
+`video/` builds a narrated, numbered walkthrough video of the workflows from scripts (see `video/README.md`).

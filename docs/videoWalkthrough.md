@@ -2,7 +2,7 @@
 
 A shot-by-shot plan for a 10 to 12 minute beginner video: how to check that agentic steps are wired correctly, and what the workflows do **before, during and after** a sales call. Everything runs locally (Dify in Docker Desktop, llama-server for models, the mock CRM). Setup is in `designAgenticCRM.md`, editing in `customizingWorkflows.md`, sales context in `sales101.md`.
 
-Status: this is a plan. The scripts and recording described in section 2 have **not** been built yet, and the workflows have not been run end to end in the UI.
+Status: the scene scripts, narration and builder now exist and are described in `docker/crm-local/playwright/video/README.md` (build with `node build.js`). This document is the original plan and the reasoning behind it; where the two differ, the README and the scene files are what runs. Main differences: the final video has five numbered parts (wiring, before, during, after, real CRM) plus an intro and a recap, every step has a numbered header, a who-does-it tag (you, automatic, AI step, human approval) and an on-screen explanation, and the "adding or removing a gate" scene was not built.
 
 ## 1. Cast and data
 
@@ -20,22 +20,16 @@ Main demo contact: **Aisha Tester5** (`aisha.tester5@example.com`), stage Negoti
 
 ## 2. How the video gets made
 
-**Recommended approach: scripted Playwright for the UI, with a human or TTS voice-over added afterwards. A browser-control MCP server is optional and not needed.**
+**As built: a scripted Playwright recording plus a built-in Windows voice, joined with ffmpeg.** No MCP browser tool is involved: a script is repeatable, so a bad take or a UI change is fixed by re-running it.
 
-| Option | Verdict |
-|---|---|
-| **Playwright script** (Node or Python) | Best for repeatable takes. Every run clicks the same things in the same order, so you re-record after a UI change or a bad take by re-running. Playwright can record the browser tab to video, take screenshots at key moments, and keep a trace for debugging. |
-| **MCP browser tool** (a Playwright MCP server, driven by Claude) | Useful for **authoring**: exploring the live UI interactively to find reliable selectors. Not ideal for the final recording because each run is a fresh set of model decisions, so timing and clicks vary. I have no browser MCP server configured in this session. |
-| **Mix** | Use MCP (if you add one) to discover selectors, then freeze them into the Playwright script. The script is the thing you record with. |
+1. Each scene is a script of numbered steps. A step has a title, tags, an on-screen explanation, the narration, and the browser actions (`playwright/video/scenes/`).
+2. `playwright/video/build.js` turns each narration line into speech (`tts.ps1`, offline Windows voices), records the scene in a headless browser with video on, and holds each step on screen until its narration has finished.
+3. `ffmpeg` places each narration clip at the moment its step began and writes one MP4 per scene, then joins them into `out/walkthrough.mp4`.
 
-What's already on this machine: Playwright browser downloads (Chromium headless builds), `ffmpeg`, and `espeak-ng`. OBS is not installed. Playwright's built-in recording is fine for a tutorial but lower quality than a real screen recorder. For better quality, run the script in a headed browser at 1920x1080 and capture with OBS or `ffmpeg` screen capture.
-
-**Pipeline:**
-1. A Playwright script per scene, each starting from a known state (reset CRM, import fresh workflow copies).
-2. Each script pauses on the moments that matter (for example 2 seconds on an error message) and highlights elements with an injected outline or zoom, so viewers can follow.
-3. Record per scene, then join scenes and add voice-over and captions with `ffmpeg`.
-4. Voice-over: your own voice reading the narration below will sound best. `espeak-ng` works for a draft but sounds robotic.
-5. If a model call is slow, record the real run and speed up the waiting part in the edit with a visible "sped up" label, instead of faking output.
+Notes:
+- The narration voice is clear but synthetic. For a human voice, record over the silent video instead.
+- The browser is headless Chromium at 1600x900, so the recording needs no screen recorder.
+- The overlay (cursor ring, red highlight, numbered info bar) is drawn inside the page by `playwright/video/lib.js`.
 
 ## 3. Pre-flight checklist (before every take)
 
@@ -128,8 +122,7 @@ Use `customizingWorkflows.md`. Duplicate the Pre-call brief app (read-only, so i
 
 ## 6. Status
 
-- The four workflows are imported in Dify and have been run through the UI: pre-call brief, post-call (Approve and Reject), live helper, Phase 1, and the timeout path (on a scratch copy with timeout 0). Details are in `setupRunbook.md` section 11.
-- Playwright helpers exist for launching a browser, importing, reading the checklist, running each app and clicking Approve or Reject (`docker/crm-local/playwright/`).
-- **No video has been recorded and there are no per-scene recording scripts or voice-over yet.**
-- Not yet handled: pacing and highlighting for the camera, and a decision on live narration versus text-to-speech.
-- Caveats found while testing: the canvas can show stale green ticks from an earlier run (use the Tracing tab), and the timeout path is shown on a scratch copy, not waited out.
+- Built: scene scripts for the introduction, wiring (including a deliberately broken copy), before the call, during the call (simulated), after the call (approve, reject, timeout explained on the canvas), a real-CRM note and a recap; the narration builder; the video builder.
+- Tested in Dify with the real workflows: every scene has been recorded at least once; the final complete build is described in the README.
+- Not built: the scene that adds or removes an approval gate on the canvas (drag-and-drop is fragile to script; `customizingWorkflows.md` covers the steps), speed-up of long model waits, and a human voice-over.
+- Caveats found while recording: the canvas can show stale green ticks from an earlier run (the Tracing tab shows what really ran); the mock CRM had to be made multi-threaded, because Chrome's idle connections blocked its single thread and timed out Dify's lookup; model calls take 10 to 70 seconds.
