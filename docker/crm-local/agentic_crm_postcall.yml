@@ -1,0 +1,634 @@
+app:
+  name: Post-call update
+  mode: workflow
+  icon: 📝
+  icon_type: emoji
+  icon_background: '#E3F7E8'
+  description: Transcript -> summary, BANT + next steps, follow-up draft -> human
+    review -> CRM log.
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.6.0
+dependencies: []
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - id: 6c1b3f0a-2d4e-4f6a-8b9c-1d2e3f4a5b6c
+    name: CRM_BASE_URL
+    value: http://host.docker.internal:8090
+    value_type: string
+    description: Mock CRM; replace with your CRM base URL
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: start-source-crm_history
+      source: start
+      sourceHandle: source
+      target: crm_history
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: crm_history-source-summary
+      source: crm_history
+      sourceHandle: source
+      target: summary
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: summary-source-bant
+      source: summary
+      sourceHandle: source
+      target: bant
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: bant-source-followup
+      source: bant
+      sourceHandle: source
+      target: followup
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: human-input
+      id: followup-source-review
+      source: followup
+      sourceHandle: source
+      target: review
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: code
+      id: review-approve-build_payload
+      source: review
+      sourceHandle: approve
+      target: build_payload
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: end
+      id: review-reject-end_rejected
+      source: review
+      sourceHandle: reject
+      target: end_rejected
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: end
+      id: review-__timeout-end_timeout
+      source: review
+      sourceHandle: __timeout
+      target: end_timeout
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: build_payload-source-crm_write
+      source: build_payload
+      sourceHandle: source
+      target: crm_write
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: end
+      id: crm_write-source-end_logged
+      source: crm_write
+      sourceHandle: source
+      target: end_logged
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: Call transcript
+        type: start
+        variables:
+        - variable: contact_email
+          label: Contact email
+          type: text-input
+          required: true
+          max_length: 200
+          options: []
+        - variable: call_type
+          label: Call type
+          type: select
+          required: true
+          max_length: 48
+          options:
+          - Discovery
+          - Demo
+          - Proposal and pricing review
+          - Negotiation
+          - Closing
+        - variable: transcript
+          label: Transcript
+          type: paragraph
+          required: true
+          max_length: 30000
+          options: []
+        selected: false
+      height: 118
+      id: start
+      position:
+        x: 40
+        y: 260
+      positionAbsolute:
+        x: 40
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: CRM history
+        type: http-request
+        method: get
+        url: '{{#env.CRM_BASE_URL#}}/crm/history'
+        authorization:
+          type: no-auth
+        headers: ''
+        params: email:{{#start.contact_email#}}
+        body:
+          type: none
+          data: []
+        timeout:
+          connect: 10
+          read: 30
+          write: 30
+        retry_config: &id001
+          enabled: false
+          max_retries: 1
+          retry_interval: 1000
+          exponential_backoff:
+            enabled: false
+            multiplier: 2
+            max_interval: 10000
+        selected: false
+      height: 90
+      id: crm_history
+      position:
+        x: 330
+        y: 260
+      positionAbsolute:
+        x: 330
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Call summary
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.3
+        prompt_template:
+        - role: system
+          text: 'You summarize sales calls for the CRM. Use ONLY what is in the transcript.
+            Do not invent facts.
+
+            Output markdown: 5 short bullets covering what was discussed, then ''Objections
+            raised:'' and
+
+            ''Commitments made (by whom):'' lists. Write ''None'' for an empty list.'
+        - role: user
+          text: 'Call type: {{#start.call_type#}}
+
+
+            CRM record before the call (JSON):
+
+            {{#crm_history.body#}}
+
+
+            Transcript:
+
+            {{#start.transcript#}}'
+        vision:
+          enabled: false
+        memory: null
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: *id001
+        selected: false
+      height: 118
+      id: summary
+      position:
+        x: 620
+        y: 260
+      positionAbsolute:
+        x: 620
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: BANT + next steps
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.3
+        prompt_template:
+        - role: system
+          text: 'You update BANT fields and next steps from a sales call. Use ONLY
+            the transcript and the CRM record.
+
+            Never invent facts; label inferences as ''Inferred''. Output markdown
+            with:
+
+            ## BANT changes (for Budget, Authority, Need, Timeline: Unchanged / Updated:
+            <new info> / Unknown)
+
+            ## Next steps (each with owner and date if stated in the call, otherwise
+            ''date not stated'')
+
+            ## Suggested stage change (Suggestion only: one stage name or ''No change'',
+            with a one-line reason)'
+        - role: user
+          text: 'Call type: {{#start.call_type#}}
+
+
+            CRM record before the call (JSON):
+
+            {{#crm_history.body#}}
+
+
+            Transcript:
+
+            {{#start.transcript#}}'
+        vision:
+          enabled: false
+        memory: null
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: *id001
+        selected: false
+      height: 118
+      id: bant
+      position:
+        x: 910
+        y: 260
+      positionAbsolute:
+        x: 910
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Follow-up email
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.4
+        prompt_template:
+        - role: system
+          text: 'You write the recap email a sales rep sends after a call. Under 150
+            words, friendly and specific.
+
+            Mention ONLY next steps and commitments that were actually agreed in the
+            transcript.
+
+            Do not offer discounts, prices or terms that were not agreed. Output the
+            email body only.'
+        - role: user
+          text: 'Call type: {{#start.call_type#}}
+
+
+            CRM record before the call (JSON):
+
+            {{#crm_history.body#}}
+
+
+            Transcript:
+
+            {{#start.transcript#}}'
+        vision:
+          enabled: false
+        memory: null
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: *id001
+        selected: false
+      height: 118
+      id: followup
+      position:
+        x: 1200
+        y: 260
+      positionAbsolute:
+        x: 1200
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Review before CRM update
+        type: human-input
+        delivery_methods:
+        - enabled: true
+          id: 7a2d9e10-3b4c-4d5e-8f60-1a2b3c4d5e6f
+          type: webapp
+        form_content: 'Review and edit what will be logged to the CRM and sent as
+          the follow-up.
+
+
+          **Call summary**
+
+          {{#$output.call_summary#}}
+
+
+          **BANT changes and next steps**
+
+          {{#$output.bant_updates#}}
+
+
+          **Follow-up email draft**
+
+          {{#$output.followup_email#}}'
+        inputs:
+        - type: paragraph
+          output_variable_name: call_summary
+          default:
+            type: variable
+            selector:
+            - summary
+            - text
+            value: ''
+        - type: paragraph
+          output_variable_name: bant_updates
+          default:
+            type: variable
+            selector:
+            - bant
+            - text
+            value: ''
+        - type: paragraph
+          output_variable_name: followup_email
+          default:
+            type: variable
+            selector:
+            - followup
+            - text
+            value: ''
+        user_actions:
+        - id: approve
+          title: Approve and log to CRM
+          button_style: primary
+        - id: reject
+          title: Reject
+          button_style: default
+        timeout: 1
+        timeout_unit: day
+        selected: false
+      height: 240
+      id: review
+      position:
+        x: 1490
+        y: 220
+      positionAbsolute:
+        x: 1490
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Build CRM payload
+        type: code
+        code_language: python3
+        code: "import json\n\ndef main(email: str, call_type: str, call_summary: str,\
+          \ bant_updates: str, followup_email: str) -> dict:\n    payload = {\n  \
+          \      'contact_email': email,\n        'type': 'call',\n        'call_type':\
+          \ call_type,\n        'summary': call_summary + '\\n\\nBANT changes and\
+          \ next steps:\\n' + bant_updates,\n        'followup_email_draft': followup_email,\n\
+          \    }\n    return {'payload': json.dumps(payload)}"
+        variables:
+        - variable: email
+          value_selector:
+          - start
+          - contact_email
+        - variable: call_type
+          value_selector:
+          - start
+          - call_type
+        - variable: call_summary
+          value_selector:
+          - review
+          - call_summary
+        - variable: bant_updates
+          value_selector:
+          - review
+          - bant_updates
+        - variable: followup_email
+          value_selector:
+          - review
+          - followup_email
+        outputs:
+          payload:
+            type: string
+            children: null
+        selected: false
+      height: 90
+      id: build_payload
+      position:
+        x: 1790
+        y: 150
+      positionAbsolute:
+        x: 1790
+        y: 150
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Log to CRM
+        type: http-request
+        method: post
+        url: '{{#env.CRM_BASE_URL#}}/crm/activities'
+        authorization:
+          type: no-auth
+        headers: 'Idempotency-Key:{{#sys.workflow_run_id#}}
+
+          Content-Type:application/json'
+        params: ''
+        body:
+          type: raw-text
+          data:
+          - key: ''
+            type: text
+            value: '{{#build_payload.payload#}}'
+        timeout:
+          connect: 10
+          read: 30
+          write: 30
+        retry_config: *id001
+        selected: false
+      height: 90
+      id: crm_write
+      position:
+        x: 2090
+        y: 150
+      positionAbsolute:
+        x: 2090
+        y: 150
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Logged
+        type: end
+        outputs:
+        - variable: crm_response
+          value_type: string
+          value_selector:
+          - crm_write
+          - body
+        selected: false
+      height: 90
+      id: end_logged
+      position:
+        x: 2390
+        y: 150
+      positionAbsolute:
+        x: 2390
+        y: 150
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Rejected (nothing logged)
+        type: end
+        outputs:
+        - variable: rejected_action
+          value_type: string
+          value_selector:
+          - review
+          - __action_id
+        selected: false
+      height: 90
+      id: end_rejected
+      position:
+        x: 1790
+        y: 330
+      positionAbsolute:
+        x: 1790
+        y: 330
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Timed out (nothing logged)
+        type: end
+        outputs:
+        - variable: timeout_action
+          value_type: string
+          value_selector:
+          - review
+          - __action_id
+        selected: false
+      height: 90
+      id: end_timeout
+      position:
+        x: 1790
+        y: 450
+      positionAbsolute:
+        x: 1790
+        y: 450
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.7
+  rag_pipeline_variables: []

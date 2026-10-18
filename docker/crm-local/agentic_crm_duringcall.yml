@@ -1,0 +1,257 @@
+app:
+  name: Live call helper (simulated)
+  mode: advanced-chat
+  icon: 🎧
+  icon_type: emoji
+  icon_background: '#FDE8E8'
+  description: 'Simulated during-call helper: paste the buyer''s last words, get a
+    signal, response and next question.'
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.6.0
+dependencies: []
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - id: 6c1b3f0a-2d4e-4f6a-8b9c-1d2e3f4a5b6c
+    name: CRM_BASE_URL
+    value: http://host.docker.internal:8090
+    value_type: string
+    description: Mock CRM; replace with your CRM base URL
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: Paste what the buyer just said and I will suggest a response
+      and a next question. You stay in control of the call.
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: start-source-crm_history
+      source: start
+      sourceHandle: source
+      target: crm_history
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: crm_history-source-helper
+      source: crm_history
+      sourceHandle: source
+      target: helper
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: helper-source-answer
+      source: helper
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: Call setup
+        type: start
+        variables:
+        - variable: contact_email
+          label: Contact email
+          type: text-input
+          required: true
+          max_length: 200
+          options: []
+        - variable: call_type
+          label: Call type
+          type: select
+          required: true
+          max_length: 48
+          options:
+          - Cold call
+          - Discovery
+          - Demo
+          - Proposal and pricing review
+          - Negotiation
+          - Closing
+        selected: false
+      height: 118
+      id: start
+      position:
+        x: 40
+        y: 220
+      positionAbsolute:
+        x: 40
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: CRM history
+        type: http-request
+        method: get
+        url: '{{#env.CRM_BASE_URL#}}/crm/history'
+        authorization:
+          type: no-auth
+        headers: ''
+        params: email:{{#start.contact_email#}}
+        body:
+          type: none
+          data: []
+        timeout:
+          connect: 10
+          read: 30
+          write: 30
+        retry_config: &id001
+          enabled: false
+          max_retries: 1
+          retry_interval: 1000
+          exponential_backoff:
+            enabled: false
+            multiplier: 2
+            max_interval: 10000
+        selected: false
+      height: 90
+      id: crm_history
+      position:
+        x: 340
+        y: 220
+      positionAbsolute:
+        x: 340
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Live suggestion
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.4
+        prompt_template:
+        - role: system
+          text: 'You are a live call helper for a sales rep. The rep pastes what the
+            buyer just said. The rep stays in control
+
+            and decides what to say. Keep every reply under 120 words, in exactly
+            this format:
+
+            **Signal:** (buying signal, or the objection type: price, timing, authority,
+            need, competitor, risk, other)
+
+            **Suggested response:** (1-3 sentences the rep can say; use LAER, Listen-Acknowledge-Explore-Respond,
+            or
+
+            Feel-Felt-Found when handling an objection)
+
+            **Next question:** (one open-ended question)
+
+            Rules: use ONLY facts from the CRM record and the conversation. Never
+            invent product claims, prices or
+
+            references. Never say or imply that a price, discount or term is approved
+            or available, and do not describe
+
+            the budget as the proposal. If information is missing, say so.
+
+            DISCOUNT RULE: if the buyer asks for a discount, a lower price, or any
+            change to price or contract terms,
+
+            the Suggested response MUST start with the exact words ''Hold: needs approval.''
+            followed by one sentence that
+
+            buys time (for example, acknowledge the request and offer a written answer).
+            Never suggest agreeing.
+
+            COMPETITOR RULE: if a competitor is mentioned, ask what is included in
+            their quote and do not disparage them.
+
+
+            Call type: {{#start.call_type#}}
+
+            CRM record (JSON): {{#crm_history.body#}}'
+        - role: user
+          text: '{{#sys.query#}}'
+        vision:
+          enabled: false
+        memory:
+          role_prefix:
+            user: ''
+            assistant: ''
+          window:
+            enabled: true
+            size: 20
+          query_prompt_template: '{{#sys.query#}}'
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: *id001
+        selected: false
+      height: 118
+      id: helper
+      position:
+        x: 640
+        y: 220
+      positionAbsolute:
+        x: 640
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Answer
+        type: answer
+        answer: '{{#helper.text#}}'
+        variables: []
+        selected: false
+      height: 90
+      id: answer
+      position:
+        x: 940
+        y: 220
+      positionAbsolute:
+        x: 940
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.7
+  rag_pipeline_variables: []

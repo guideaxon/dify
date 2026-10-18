@@ -1,0 +1,400 @@
+app:
+  name: Agentic CRM - Phase 1
+  mode: workflow
+  icon: 💼
+  icon_type: emoji
+  icon_background: '#FFEAD5'
+  description: Lead inquiry -> LLM draft -> human review -> CRM write.
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.6.0
+dependencies: []
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - id: 6c1b3f0a-2d4e-4f6a-8b9c-1d2e3f4a5b6c
+    name: CRM_BASE_URL
+    value: http://host.docker.internal:8090
+    value_type: string
+    description: Mock CRM; replace with your CRM base URL
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: start-source-draft
+      source: start
+      sourceHandle: source
+      target: draft
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: human-input
+      id: draft-source-review
+      source: draft
+      sourceHandle: source
+      target: review
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: code
+      id: review-approve-build_payload
+      source: review
+      sourceHandle: approve
+      target: build_payload
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: build_payload-source-crm_write
+      source: build_payload
+      sourceHandle: source
+      target: crm_write
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: end
+      id: review-reject-end_rejected
+      source: review
+      sourceHandle: reject
+      target: end_rejected
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: human-input
+        targetType: end
+      id: review-__timeout-end_timeout
+      source: review
+      sourceHandle: __timeout
+      target: end_timeout
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: end
+      id: crm_write-source-end_sent
+      source: crm_write
+      sourceHandle: source
+      target: end_sent
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: Lead inquiry
+        type: start
+        variables:
+        - variable: lead_name
+          label: Lead name
+          type: text-input
+          required: true
+          max_length: 100
+          options: []
+        - variable: lead_email
+          label: Lead email
+          type: text-input
+          required: true
+          max_length: 200
+          options: []
+        - variable: inquiry
+          label: Inquiry
+          type: paragraph
+          required: true
+          max_length: 4000
+          options: []
+        selected: false
+      height: 90
+      id: start
+      position:
+        x: 40
+        y: 260
+      positionAbsolute:
+        x: 40
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Draft reply
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.4
+        prompt_template:
+        - role: system
+          text: You are a sales assistant. Write a concise, friendly, accurate reply
+            to the lead. Do not invent prices, discounts or commitments. Output only
+            the email body.
+        - role: user
+          text: 'Lead: {{#start.lead_name#}} <{{#start.lead_email#}}>
+
+
+            Inquiry:
+
+            {{#start.inquiry#}}'
+        vision:
+          enabled: false
+        memory: null
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: &id001
+          enabled: false
+          max_retries: 1
+          retry_interval: 1000
+          exponential_backoff:
+            enabled: false
+            multiplier: 2
+            max_interval: 10000
+        selected: false
+      height: 118
+      id: draft
+      position:
+        x: 340
+        y: 260
+      positionAbsolute:
+        x: 340
+        y: 260
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Review draft
+        type: human-input
+        delivery_methods:
+        - enabled: true
+          id: 5b1f0c2e-7d3a-4c1e-9a52-0a1b2c3d4e5f
+          type: webapp
+        form_content: 'Review and edit the draft reply to **{{#start.lead_name#}}**.
+
+
+          {{#$output.reply#}}'
+        inputs:
+        - type: paragraph
+          output_variable_name: reply
+          default:
+            type: variable
+            selector:
+            - draft
+            - text
+            value: ''
+        user_actions:
+        - id: approve
+          title: Approve and send
+          button_style: primary
+        - id: reject
+          title: Reject
+          button_style: default
+        timeout: 1
+        timeout_unit: day
+        selected: false
+      height: 220
+      id: review
+      position:
+        x: 640
+        y: 240
+      positionAbsolute:
+        x: 640
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Build CRM payload
+        type: code
+        code_language: python3
+        code: "import json\n\ndef main(name: str, email: str, reply: str) -> dict:\n\
+          \    payload = {'contact_name': name, 'contact_email': email, 'type': 'email_reply',\
+          \ 'approved_body': reply}\n    return {'payload': json.dumps(payload)}"
+        variables:
+        - variable: name
+          value_selector:
+          - start
+          - lead_name
+        - variable: email
+          value_selector:
+          - start
+          - lead_email
+        - variable: reply
+          value_selector:
+          - review
+          - reply
+        outputs:
+          payload:
+            type: string
+            children: null
+        selected: false
+      height: 90
+      id: build_payload
+      position:
+        x: 800
+        y: 160
+      positionAbsolute:
+        x: 800
+        y: 160
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Write to CRM
+        type: http-request
+        method: post
+        url: '{{#env.CRM_BASE_URL#}}/crm/activities'
+        authorization:
+          type: no-auth
+        headers: 'Idempotency-Key:{{#sys.workflow_run_id#}}
+
+          Content-Type:application/json'
+        params: ''
+        body:
+          type: raw-text
+          data:
+          - key: ''
+            type: text
+            value: '{{#build_payload.payload#}}'
+        timeout:
+          connect: 10
+          read: 30
+          write: 30
+        retry_config: *id001
+        selected: false
+      height: 90
+      id: crm_write
+      position:
+        x: 1100
+        y: 160
+      positionAbsolute:
+        x: 1100
+        y: 160
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Sent
+        type: end
+        outputs:
+        - variable: crm_response
+          value_type: string
+          value_selector:
+          - crm_write
+          - body
+        selected: false
+      height: 90
+      id: end_sent
+      position:
+        x: 1400
+        y: 160
+      positionAbsolute:
+        x: 1400
+        y: 160
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Rejected (no write)
+        type: end
+        outputs:
+        - variable: rejected_action
+          value_type: string
+          value_selector:
+          - review
+          - __action_id
+        selected: false
+      height: 90
+      id: end_rejected
+      position:
+        x: 960
+        y: 320
+      positionAbsolute:
+        x: 960
+        y: 320
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Timed out (no write)
+        type: end
+        outputs:
+        - variable: timeout_action
+          value_type: string
+          value_selector:
+          - review
+          - __action_id
+        selected: false
+      height: 90
+      id: end_timeout
+      position:
+        x: 960
+        y: 440
+      positionAbsolute:
+        x: 960
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.8
+  rag_pipeline_variables: []

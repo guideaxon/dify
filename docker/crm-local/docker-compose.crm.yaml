@@ -1,0 +1,86 @@
+# Agentic CRM local add-ons, layered on top of docker-compose.yaml. This file is tracked.
+# crm-local/bootstrap.ps1 sets COMPOSE_FILE in docker/.env so plain `docker compose ...` commands
+# from the docker/ directory include it. Or pass it explicitly:
+#   docker compose -f docker-compose.yaml -f crm-local/docker-compose.crm.yaml up -d
+# Enable optional pieces with profiles:
+#   docker compose --profile n8n up -d
+#   docker compose --profile mail up -d
+# Host access (Ollama): Docker Desktop already resolves host.docker.internal.
+# On Docker Engine without Desktop, add to api/worker/plugin_daemon:
+#   extra_hosts: ["host.docker.internal:host-gateway"]
+
+# Image pins (tag@digest) for reproducible installs. Digests resolved from Docker Hub on 2026-10-17.
+# When upgrading Dify, update these together with the tags in docker-compose.yaml.
+services:
+  api:
+    image: langgenius/dify-api:1.17.1@sha256:ceede5b903afaa20348f7ad80ebf847379dc56d886a99b9ec6a08913dacd7732
+  web:
+    image: langgenius/dify-web:1.17.1@sha256:6353fe8e04481aaef873ef7317507bfa9ac862572118fd037563a71bff9f4d08
+  plugin_daemon:
+    image: langgenius/dify-plugin-daemon:0.6.10-local@sha256:34412a22d1e1d1a6c73727fef88cffbcdd9be7a21bf9ad3076b4bf5c1b88fd9b
+  sandbox:
+    image: langgenius/dify-sandbox:0.2.15@sha256:750e1111426ef31a9217b81c98cccfb750f17b182af3221102e420afa9f0928e
+  agent_backend:
+    image: langgenius/dify-agent-backend:1.17.1@sha256:a30c039bbead65d7fd8baf8c53fc867373f515c5721e46070ce03ed04c5f1e32
+  local_sandbox:
+    image: langgenius/dify-agent-local-sandbox:1.17.1@sha256:f4d404c9dcdf80bd72f65e84c3f2bbd1f3404fd4b363db837176da8aaf771b1d
+  db_postgres:
+    image: postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81
+  pgvector:
+    image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+  redis:
+    image: redis:6-alpine@sha256:b362b5dff9d14d961dc3352db4776aba6a8c53ca2661d7c74ad2c121f82cdaea
+  nginx:
+    image: nginx:1.30.6@sha256:eb1c896deef834f4e056829fd6dadac8305501f16cc71ba65fb252c8d0aa168e
+  ssrf_proxy:
+    image: ubuntu/squid:6.13-25.04_beta@sha256:3de2e64f0ca6efdac3e98557607dc0f23050037f3885016d5d5bfcf9950501b8
+  agent_ssrf_proxy:
+    image: ubuntu/squid:6.13-25.04_beta@sha256:3de2e64f0ca6efdac3e98557607dc0f23050037f3885016d5d5bfcf9950501b8
+  init_permissions:
+    image: busybox:1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+  api_websocket:
+    image: langgenius/dify-api:1.17.1@sha256:ceede5b903afaa20348f7ad80ebf847379dc56d886a99b9ec6a08913dacd7732
+  worker:
+    image: langgenius/dify-api:1.17.1@sha256:ceede5b903afaa20348f7ad80ebf847379dc56d886a99b9ec6a08913dacd7732
+  worker_beat:
+    image: langgenius/dify-api:1.17.1@sha256:ceede5b903afaa20348f7ad80ebf847379dc56d886a99b9ec6a08913dacd7732
+
+  mailpit:
+    image: axllent/mailpit:v1.21@sha256:81370195cd4a0eab9604d17c2617a7525b0486f9365555253b6c5376c6350f1a
+    profiles: [mail]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # web UI; SMTP on mailpit:1025 inside the network
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.43.7@sha256:3db21366be1d3c77c1708963129c051948573019659e8873e0294be035ffc1b2
+    profiles: [n8n]
+    restart: unless-stopped
+    environment:
+      # Not required: Compose evaluates this even when the n8n profile is off, so a hard requirement
+      # would break every `docker compose` command. bootstrap.ps1 sets a value; if it is empty n8n
+      # generates its own key on first start and keeps it in the n8n_data volume.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-}
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n     # named volume: avoids NTFS locking
+    # n8n reaches Dify at http://api:5001 (same default network).
+
+  # Template: HTTP wrapper around a stdio MCP server. Replace the image/command
+  # with your gateway. Dify registers it as http://mcp-gateway:8000/...
+  # mcp-gateway:
+  #   image: <your-mcp-gateway-image>
+  #   profiles: [mcp]
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./volumes/mcp-shared:/data/mcp-shared
+  #   expose:
+  #     - "8000"
+
+volumes:
+  n8n_data:

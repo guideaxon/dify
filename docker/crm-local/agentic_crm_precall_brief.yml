@@ -1,0 +1,258 @@
+app:
+  name: Pre-call brief
+  mode: workflow
+  icon: 📞
+  icon_type: emoji
+  icon_background: '#E0EAFF'
+  description: 'Read-only: CRM history + rep notes -> BANT gaps, objective, discovery
+    questions.'
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.6.0
+dependencies: []
+workflow:
+  conversation_variables: []
+  environment_variables:
+  - id: 6c1b3f0a-2d4e-4f6a-8b9c-1d2e3f4a5b6c
+    name: CRM_BASE_URL
+    value: http://host.docker.internal:8090
+    value_type: string
+    description: Mock CRM; replace with your CRM base URL
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: http-request
+      id: start-source-crm_history
+      source: start
+      sourceHandle: source
+      target: crm_history
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: crm_history-source-brief
+      source: crm_history
+      sourceHandle: source
+      target: brief
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: brief-source-end
+      source: brief
+      sourceHandle: source
+      target: end
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        title: Upcoming call
+        type: start
+        variables:
+        - variable: contact_name
+          label: Contact name
+          type: text-input
+          required: true
+          max_length: 100
+          options: []
+        - variable: contact_email
+          label: Contact email
+          type: text-input
+          required: true
+          max_length: 200
+          options: []
+        - variable: company
+          label: Company
+          type: text-input
+          required: true
+          max_length: 200
+          options: []
+        - variable: call_type
+          label: Call type
+          type: select
+          required: true
+          max_length: 48
+          options:
+          - Discovery
+          - Demo
+          - Proposal and pricing review
+          - Negotiation
+          - Closing
+        - variable: notes
+          label: Your notes (optional)
+          type: paragraph
+          required: false
+          max_length: 4000
+          options: []
+        selected: false
+      height: 118
+      id: start
+      position:
+        x: 40
+        y: 200
+      positionAbsolute:
+        x: 40
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: CRM history
+        type: http-request
+        method: get
+        url: '{{#env.CRM_BASE_URL#}}/crm/history'
+        authorization:
+          type: no-auth
+        headers: ''
+        params: email:{{#start.contact_email#}}
+        body:
+          type: none
+          data: []
+        timeout:
+          connect: 10
+          read: 30
+          write: 30
+        retry_config: &id001
+          enabled: false
+          max_retries: 1
+          retry_interval: 1000
+          exponential_backoff:
+            enabled: false
+            multiplier: 2
+            max_interval: 10000
+        selected: false
+      height: 90
+      id: crm_history
+      position:
+        x: 340
+        y: 200
+      positionAbsolute:
+        x: 340
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Write brief
+        type: llm
+        model:
+          provider: langgenius/openai_api_compatible/openai_api_compatible
+          name: qwen3.5-9b
+          mode: chat
+          completion_params:
+            temperature: 0.3
+        prompt_template:
+        - role: system
+          text: 'You prepare sales reps for calls. Use ONLY the information given.
+            Never invent facts about the
+
+            company or contact; if something is unknown, say so under ''Unknown''.
+            Output markdown with these sections:
+
+            ## Objective (one concrete outcome for this call type)
+
+            ## BANT: for Budget, Authority, Need, Timeline give Known / Unknown /
+            Guess (label guesses as guesses)
+
+            ## History (bullet summary of prior activity)
+
+            ## Discovery questions (exactly 3, open-ended)
+
+            ## Risks and watch-outs'
+        - role: user
+          text: 'Call type: {{#start.call_type#}}
+
+            Contact: {{#start.contact_name#}} <{{#start.contact_email#}}> at {{#start.company#}}
+
+
+            CRM history (JSON):
+
+            {{#crm_history.body#}}
+
+
+            Rep notes:
+
+            {{#start.notes#}}'
+        vision:
+          enabled: false
+        memory: null
+        context:
+          enabled: false
+          variable_selector: []
+        structured_output_enabled: false
+        retry_config: *id001
+        selected: false
+      height: 118
+      id: brief
+      position:
+        x: 640
+        y: 200
+      positionAbsolute:
+        x: 640
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        title: Brief
+        type: end
+        outputs:
+        - variable: brief
+          value_type: string
+          value_selector:
+          - brief
+          - text
+        selected: false
+      height: 90
+      id: end
+      position:
+        x: 940
+        y: 200
+      positionAbsolute:
+        x: 940
+        y: 200
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.8
+  rag_pipeline_variables: []

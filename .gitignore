@@ -270,3 +270,12 @@ web/.vitest-reports/
 # dify-agent-runtime
 dify-agent-runtime/bin/
 dify-agent-runtime/.integration-state
+
+# local llama-server logs
+docker/crm-local/logs/
+docker/crm-local/mock_crm_log.jsonl
+
+# Playwright helpers
+docker/crm-local/playwright/node_modules/
+docker/crm-local/playwright/.profile/
+docker/crm-local/playwright/package-lock.json

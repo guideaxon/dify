@@ -1,0 +1,67 @@
+{
+  "contacts": [
+    {
+      "email": "priya.tester1@example.com", "first_name": "Priya", "last_name": "Tester1",
+      "title": "Operations Manager", "company": "Acme Test Logistics", "industry": "Logistics", "employees": 180,
+      "owner": "Rep One", "stage": "Lead", "deal_amount": null,
+      "bant": {"budget": null, "authority": null, "need": "Asked about route-planning automation", "timeline": null},
+      "activities": [
+        {"date": "2026-10-14", "type": "web_form", "summary": "Requested a demo via the website form; said manual dispatch is slowing the team."}
+      ]
+    },
+    {
+      "email": "marcus.tester2@example.com", "first_name": "Marcus", "last_name": "Tester2",
+      "title": "VP Finance", "company": "Bluepeak Test Health", "industry": "Healthcare services", "employees": 650,
+      "owner": "Rep One", "stage": "Qualified", "deal_amount": 48000,
+      "bant": {"budget": "Approx. 40-50k annual, not yet approved", "authority": "Economic buyer; needs CEO sign-off above 50k", "need": "Invoice reconciliation takes 6 days per month-end", "timeline": "Wants a solution before fiscal year end (Dec 31)"},
+      "activities": [
+        {"date": "2026-09-30", "type": "email_reply", "summary": "Sent overview deck and two case studies after webinar attendance."},
+        {"date": "2026-10-08", "type": "call", "summary": "Discovery call (25 min). Pain: month-end close. Mentioned a competing quote but would not name it."}
+      ]
+    },
+    {
+      "email": "elena.tester3@example.com", "first_name": "Elena", "last_name": "Tester3",
+      "title": "IT Director", "company": "Cedar Ridge Test Manufacturing", "industry": "Manufacturing", "employees": 1200,
+      "owner": "Rep Two", "stage": "Solution", "deal_amount": 120000,
+      "bant": {"budget": "Budget line exists for 100-130k", "authority": "Technical evaluator; procurement and CFO involved", "need": "Legacy ERP integrations failing; wants API-first tooling", "timeline": "Pilot in Q1, contract by end of Q4"},
+      "activities": [
+        {"date": "2026-09-10", "type": "call", "summary": "Discovery call. Integration reliability is the top concern."},
+        {"date": "2026-09-24", "type": "demo", "summary": "Technical demo with two engineers. Asked about SSO and audit logs."},
+        {"date": "2026-10-09", "type": "email_reply", "summary": "Sent security questionnaire answers; awaiting procurement contact."}
+      ]
+    },
+    {
+      "email": "daniel.tester4@example.com", "first_name": "Daniel", "last_name": "Tester4",
+      "title": "Head of Sales Ops", "company": "Driftwood Test Retail", "industry": "Retail", "employees": 90,
+      "owner": "Rep Two", "stage": "Proposal", "deal_amount": 22000,
+      "bant": {"budget": "Fixed budget of 25k", "authority": "Final decision maker", "need": "Wants cleaner pipeline reporting", "timeline": "Decision by Oct 31"},
+      "activities": [
+        {"date": "2026-09-18", "type": "call", "summary": "Discovery call, straightforward need and quick decision cycle."},
+        {"date": "2026-10-02", "type": "demo", "summary": "Demo went well; asked for pricing for 15 seats."},
+        {"date": "2026-10-12", "type": "proposal_sent", "summary": "Sent proposal for 15 seats at 22k/year with a 5% annual-prepay discount."}
+      ]
+    },
+    {
+      "email": "aisha.tester5@example.com", "first_name": "Aisha", "last_name": "Tester5",
+      "title": "COO", "company": "Harborview Test Financial", "industry": "Financial services", "employees": 2400,
+      "owner": "Rep One", "stage": "Negotiation", "deal_amount": 310000,
+      "bant": {"budget": "Approved 300-320k", "authority": "Executive sponsor; legal and procurement review contract", "need": "Consolidate three customer-service tools", "timeline": "Wants signature before Nov 15"},
+      "activities": [
+        {"date": "2026-08-28", "type": "demo", "summary": "Executive demo; strong interest in consolidation."},
+        {"date": "2026-09-22", "type": "proposal_sent", "summary": "Proposal sent at 310k, 3-year term."},
+        {"date": "2026-10-10", "type": "call", "summary": "Legal raised two redlines: data residency clause and liability cap. Asked for 12% discount; not yet answered."}
+      ]
+    },
+    {
+      "email": "tom.tester6@example.com", "first_name": "Tom", "last_name": "Tester6",
+      "title": "Founder", "company": "Lumen Test Studio", "industry": "Design agency", "employees": 14,
+      "owner": "Rep Two", "stage": "Closed won", "deal_amount": 9600,
+      "bant": {"budget": "Paid annually", "authority": "Founder", "need": "Client project tracking", "timeline": "Live since Oct 1"},
+      "activities": [
+        {"date": "2026-09-05", "type": "call", "summary": "Discovery call, ready to buy quickly."},
+        {"date": "2026-09-26", "type": "closing", "summary": "Contract signed, 9.6k/year. Handed to onboarding."},
+        {"date": "2026-10-13", "type": "support", "summary": "Asked how to add a second admin; answered by customer success. Possible upsell to more seats."}
+      ]
+    }
+  ]
+}
