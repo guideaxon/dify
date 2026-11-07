@@ -153,4 +153,4 @@ Not verified:
 - Model output quality varies. In one Phase 1 draft the model made up product capabilities that were not in any input, which is why the knowledge base and the approval gate matter.
 - The canvas can show green ticks left over from a previous run on nodes that did not run in the current one; use the Tracing tab to see what actually ran.
 - Dify menu labels in sections 7 and 8 are from one Dify build and may differ in yours.
-- The Playwright helpers depend on `playwright-core` 1.57.0 and its matching Chromium build.
+- The Playwright helpers depend on `playwright-core` 1.65.0 and its matching Chromium build.

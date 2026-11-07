@@ -87,6 +87,7 @@ const getMicrophoneBrowser = () => {
       `--use-file-for-fake-audio-capture=${getVoiceInputTestMaterialPath()}%noloop`,
     ],
     headless: cucumberHeadless,
+    chromiumSandbox: true,
     slowMo: cucumberSlowMo,
   })
 
@@ -100,6 +101,7 @@ Before({ timeout: AUTH_BOOTSTRAP_TIMEOUT_MS }, async function (this: DifyWorld, 
     const browserType = e2eBrowser === 'webkit' ? webkit : chromium
     browser = await browserType.launch({
       headless: cucumberHeadless,
+      chromiumSandbox: true,
       slowMo: cucumberSlowMo,
     })
 

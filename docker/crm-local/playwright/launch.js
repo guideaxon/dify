@@ -9,11 +9,13 @@ const path = require('path');
 
 (async () => {
   // same default and override as video/session.js, so the login saved here is the one the recorder reuses
+  // The debug port is full remote control of this signed-in browser: keep it on loopback and close the window when done.
   const profile = process.env.DIFY_PROFILE || path.join(__dirname, '.profile');
   const ctx = await chromium.launchPersistentContext(profile, {
     headless: false,
+    chromiumSandbox: true,
     viewport: null,
-    args: ['--remote-debugging-port=9222', '--window-size=1600,1000', '--window-position=40,20'],
+    args: ['--remote-debugging-port=9222', '--remote-debugging-address=127.0.0.1', '--window-size=1600,1000', '--window-position=40,20'],
   });
   const page = ctx.pages()[0] || (await ctx.newPage());
   await page.goto(process.env.DIFY_URL || 'http://localhost/signin');

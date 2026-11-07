@@ -19,7 +19,7 @@ const getTasks = (pack: string, profile: string) => {
 }
 
 const ensureAuth = async () => {
-  const browser = await chromium.launch({ headless: true })
+  const browser = await chromium.launch({ headless: true, chromiumSandbox: true })
   try {
     await ensureAuthenticatedState(browser, baseURL)
   } finally {

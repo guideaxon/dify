@@ -52,8 +52,8 @@ Key design choices (and why):
 | PowerShell | Windows PowerShell 5.1 | built in; used for the scripts and the voices |
 | ffmpeg and ffprobe | 9.0.2 (full build, with libx264 and AAC) | on PATH |
 | llama.cpp `llama-server` | build 11160 (Unsloth build), CUDA | chat and embeddings |
-| playwright-core | 1.57.0 (exact) | matches the Chromium build below |
-| Chromium for Playwright | `chromium-1200` (Chrome 143) in `%LOCALAPPDATA%\ms-playwright` | `npx playwright install chromium` if missing |
+| playwright-core | 1.65.0 (exact) | matches the Chromium build below |
+| Chromium for Playwright | `chromium-1254` (Chrome 158.0.8127.18) in `%LOCALAPPDATA%\ms-playwright` | `npx playwright install chromium` if missing |
 | Windows voices | Microsoft Zira Desktop (default), Microsoft David Desktop | check with `tts.ps1 -List` |
 
 Models (chat: Qwen3.5-9B Q4_K_M, thinking off; embeddings: nomic-embed-text-v1.5 Q4_K_M) are described in `setupRunbook.md`. The video does not need different models, but the on-screen AI output will differ from the original in wording.
@@ -73,7 +73,7 @@ Check: the four apps are in Studio with these exact names (the video builder fin
 ### Step 3. Install the recording tools
 ```powershell
 cd docker\crm-local\playwright
-npm install            # installs playwright-core 1.57.0
+npm install            # installs playwright-core 1.65.0
 ffmpeg -version        # must work; also ffprobe
 ```
 If Chromium for Playwright is missing: `npx playwright install chromium`.

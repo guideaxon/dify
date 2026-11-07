@@ -12,6 +12,7 @@ const BASE = process.env.DIFY_URL || 'http://localhost';
 async function openSession({ record = null, width = 1600, height = 900 } = {}) {
   const ctx = await chromium.launchPersistentContext(PROFILE, {
     headless: true,
+    chromiumSandbox: true,
     viewport: { width, height },
     deviceScaleFactor: 1,
     ...(record ? { recordVideo: { dir: record, size: { width, height } } } : {}),

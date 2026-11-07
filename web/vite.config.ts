@@ -159,7 +159,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
             include: [browserTestPattern],
             browser: {
               enabled: true,
-              provider: playwright(),
+              provider: playwright({ launchOptions: { chromiumSandbox: true } }),
               instances: [{ browser: 'chromium' }],
               headless: true,
               screenshotFailures: true,

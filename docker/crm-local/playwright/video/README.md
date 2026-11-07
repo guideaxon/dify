@@ -17,7 +17,7 @@ Step-by-step instructions for reproducing the whole video on another machine, wi
 
 - Dify and the mock CRM running, the four workflows imported (see `docs/setupRunbook.md`).
 - A saved Dify login. Run `node ../launch.js`, sign in in the window, then **close it**. Two browsers cannot share one profile, so close any browser started by `launch.js` before building. To use a different profile folder, set `DIFY_PROFILE`.
-- `npm install` in the parent folder (`playwright-core` 1.57.0), `ffmpeg` and `ffprobe` on PATH, and Windows PowerShell (for the built-in voices).
+- `npm install` in the parent folder (`playwright-core` 1.65.0), `ffmpeg` and `ffprobe` on PATH, and Windows PowerShell (for the built-in voices).
 
 ## The tags on screen
 

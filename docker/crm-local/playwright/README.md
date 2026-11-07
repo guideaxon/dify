@@ -6,10 +6,10 @@ Small scripts that drive a visible browser through the Dify UI, for importing th
 
 ```powershell
 cd docker\crm-local\playwright
-npm install                     # installs playwright-core 1.57.0
+npm install                     # installs playwright-core 1.65.0
 ```
 
-`playwright-core` 1.57.0 matches the Chromium builds already downloaded to `%LOCALAPPDATA%\ms-playwright`. If you change the version, the browser download may need to be repeated (`npx playwright install chromium`).
+`playwright-core` 1.65.0 pins Chromium revision 1254 (158.0.8127.18) in `%LOCALAPPDATA%\ms-playwright`. After any version change, run `npx playwright install chromium`. The launch scripts set `chromiumSandbox: true`, so run them as a normal (non-elevated) user.
 
 ## Use
 

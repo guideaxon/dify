@@ -100,7 +100,7 @@ catalog:
   '@orpc/contract': 1.15.5
   '@orpc/openapi-client': 1.15.5
   '@orpc/tanstack-query': 1.15.5
-  '@playwright/test': 1.64.0
+  '@playwright/test': 1.65.0
   '@remixicon/react': 4.9.0
   '@sentry/react': 10.76.2
   '@shadcn/lint': 0.2.0
@@ -226,7 +226,7 @@ catalog:
   picocolors: 1.1.1
   picomatch: 4.0.7
   pinyin-pro: 3.29.4
-  playwright: 1.64.0
+  playwright: 1.65.0
   postcss: 8.5.29
   qrcode.react: 4.2.0
   react: 19.3.0

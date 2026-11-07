@@ -3,5 +3,5 @@
   "private": true,
   "version": "1.0.0",
   "description": "Browser helpers for the Dify CRM workflows",
-  "dependencies": { "playwright-core": "1.57.0" }
+  "dependencies": { "playwright-core": "1.65.0" }
 }

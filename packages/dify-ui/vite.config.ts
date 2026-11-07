@@ -18,7 +18,7 @@ export default defineConfig({
   test: {
     browser: {
       enabled: true,
-      provider: playwright(),
+      provider: playwright({ launchOptions: { chromiumSandbox: true } }),
       instances: [{ browser: 'chromium' }],
       headless: true,
       screenshotFailures: true,

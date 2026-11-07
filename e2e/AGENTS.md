@@ -74,3 +74,7 @@ Validation failures are contract failures. Trace them to the backend schema owne
 - Remove child and referencing resources before owners. Attach cleanup failures to the report instead of swallowing them.
 
 Failures produce screenshots and HTML captures under `cucumber-report/artifacts/`; the HTML and Cucumber Messages reports live under `cucumber-report/`. Backend and frontend startup logs live under `.logs/`. Additional CI lanes preserve their own report and log directories.
+
+## Browser Automation Safety
+
+Follow the "Browser automation safety" section in the root `AGENTS.md`. For this suite: launch Playwright with `chromiumSandbox: true` explicitly, use bundled Chromium only (no `channel`), keep `@playwright/test` on the workspace catalog version, and keep the shared `.auth/` session state git-ignored.
